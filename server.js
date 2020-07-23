@@ -1,9 +1,9 @@
 const express = require("express");
-const connectDb = require("./config/db");
+const connectDb = require("./config/db"); // Подключаем базу данных
 
 const app = express();
 
-connectDb();
+connectDb(); // Запускаем базу данных
 
 app.use(express.json({ extended: false }));
 

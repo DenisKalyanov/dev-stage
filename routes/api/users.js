@@ -29,10 +29,59 @@ router.post(
     }
 
     const { name, email, password } = req.body;
-
     try {
       let user = await User.findOne({ email });
-    } catch (err) {}
+
+      if (user) {
+        return res
+          .status(400)
+          .json({ errors: [{ msg: "User already exists" }] });
+      }
+      const avatar = gravatar.url(email, {
+        s: "200",
+        r: "pg",
+        d: "mm",
+      });
+
+      user = new User({
+        name,
+        email,
+        avatar,
+        password,
+      });
+      const salt = await bcryptjs.genSalt(10);
+      // зашифруем наш обычный пароль "password", с помощью salt
+      user.password = await bcryptjs.hash(password, salt);
+
+      //Сохраним пользователя в базу данных с помощью метода save из mongoose
+      await user.save();
+
+      //Выполним проверке, отправим запрос в формате json
+      // res.status(201).json({ msg: "All good" });
+
+      //Сформирует пэйлод который вставим в токен
+      const payload = {
+        user: {
+          id: user.id,
+        },
+      };
+
+      // создаём токен:
+      jwt.sign(
+        payload,
+        config.get("jwtSecret"),
+        { expiresIn: 36000 },
+        (err, token) => {
+          if (err) throw err;
+          res.json({ token });
+        }
+      );
+
+    } catch (err) {
+      console.log(err.message);
+
+      res.status(500).send("Send error");
+    }
   }
 );
 
