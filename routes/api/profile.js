@@ -5,6 +5,45 @@ const { check, validationResult } = require("express-validator");
 const Profile = require("../../models/Profile");
 const authMiddleware = require("../../middleware/auth");
 
+// @route GET api/profile
+// @desc Get all profiles
+// access Public
+
+router.get("/", async (req, res) => {
+  try {
+    const profile = await Profile.find().populate("user", ["name", "avatar"]);
+    //нашли пользователя и возвращаем его
+    res.json(profile);
+  } catch (err) {
+    // выводим ошибку и отправляем человеку ошибку. ВАЛИДИРУЕМ
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+// @route GET api/profile/user/:user_id
+// @desc Get profile by user id
+// access Public
+
+router.get("/user/:user_id", async (req, res) => {
+  try {
+    const profile = await Profile.findOne({
+      // у req есть свойство params, в котором он будет считывать это динамическое свойство
+      user: req.params.user_id,
+    }).populate("user", ["name", "avatar"]);
+
+    //Далее мы хотим проверить вдруг профайла нет.
+    if (!profile) {
+      return res.status(404).json({ msg: "There is no profile for this user" });
+    }
+    // так как это последняя опперация в цепочке, то  return писать не нужно
+    res.json(profile);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
 // @route POST api/profile
 // @desc Create our update profile
 // access Private
