@@ -3,6 +3,7 @@ const router = express.Router();
 const { check, validationResult } = require("express-validator");
 
 const Profile = require("../../models/Profile");
+const User = require("../../models/User");
 const authMiddleware = require("../../middleware/auth");
 
 // @route GET api/profile
@@ -40,6 +41,11 @@ router.get("/user/:user_id", async (req, res) => {
     res.json(profile);
   } catch (err) {
     console.error(err.message);
+    console.error(err.kind); // выводим тут объект ошибки (если ввели неадекватный идентефикатор)
+    // у ошибки err есть свойство kind, и если его значение ObjectID, то напишем ему об этом
+    if (err.kind === "ObjectId") {
+      return res.status(404).json({ msg: "There is no profile for this user" });
+    }
     res.status(500).send("Server error");
   }
 });
@@ -151,6 +157,23 @@ router.get("/me", authMiddleware, async (req, res) => {
     res.json(profile);
   } catch (err) {
     // выводим ошибку и отправляем человеку ошибку. ВАЛИДИРУЕМ
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+// @route DELETE api/profile
+// @desc DELETE profile & user
+// access Private
+router.delete("/", authMiddleware, async (req, res) => {
+  try {
+    //Удаляем профиль
+    await Profile.findOneAndDelete({ user: req.user.id });
+    //Удаляем пользователя
+    await User.findOneAndDelete({ _id: req.user.id });
+
+    res.json({ msg: "User has been successfully deleted" });
+  } catch (err) {
     console.error(err.message);
     res.status(500).send("Server error");
   }
