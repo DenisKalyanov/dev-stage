@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { check, validationResult } = require("express-validator");
+const config = require("config")
+const request = require("request");
 
 const Profile = require("../../models/Profile");
 const User = require("../../models/User");
@@ -50,11 +52,11 @@ router.get("/user/:user_id", async (req, res) => {
   }
 });
 
-// @route POST api/profile
+// @route PUT api/profile
 // @desc Create our update profile
 // access Private
 
-router.post(
+router.put(
   "/",
   [
     authMiddleware,
@@ -231,7 +233,7 @@ router.delete("/experience/:exp_id", authMiddleware, async (req, res) => {
   try {
     const profile = await Profile.findOne({ user: req.user.id });
     // теперь нам нужно найти тот experience который нужно удалить
-    // И в нём будем перебирать массив experienc, состоящий из объектов.
+    // И в нём будем перебирать массив experience, состоящий из объектов.
     // Их назовём exp и будем его сравнивать с тем, что мы передаём в параметрах запроса
     // в адресной строке.
 
@@ -322,5 +324,49 @@ router.delete("/education/:edu_id", authMiddleware, async (req, res) => {
     res.status(500).send("Server error");
   }
 });
+
+// @route GET api/profile/github/:username
+// @desc Get user repositories from GitHub
+// access Public
+
+router.get("/github/:username", async (req, res) => {
+  try {
+    const options = {
+      // гкш это точка по которой будем кидать запрос в котором будет описывать параметры
+      // когда будем получать профиль с сервера, то у каждого пользователя есть свой-во username
+      // и имя будет подставлдяться сюда :username и инфу будем получать по нику
+      //  В адресной строке мы укажем всё что хотим получить, количество репозиториев, которые хотим получить, потому что 
+      // мы не можем всё передать в body а кидаем инфу в строке.
+      // ? значит что мы будем использовать query (запрос) 5- значит что хотим получить 5 репозиториев.
+      // это пагинация, чтобы показывать только то что хотим: per_page=5(дать 5 штук  типо список товаров по 5 на странице)
+      // & оператор "И"
+      // created самые свежие отдай (sort=created:asc)
+      // &clien_id=${config.get()}
+      uri: `https://api.github.com/users/${req.params.username}/repos?per_page=5&sort=created:asc&clien_id=${config.get(
+        "githubClientId"
+      )}&client_secret=${config.get("githubSecret")}`,
+      method: "GET", // получаем данные
+      headers: {
+        "user-agent": "node.js" // с какой среды будут идти запросы
+      }
+    };
+    // request первым принимает options, и после колбэк ф-цию. Сначала указываем ошибку, сам респонс, его тело
+    // и небольшие проверки на ошибки, если есть, то... 
+    request(options, (err, response, body) => {
+      if (err) console.log(err);
+
+      if (response.statusCode != 200) {
+        return res.status(404).json({ msg: "No github profile found" })
+      }
+      // и если всё ОК, то отправим через JSON И распарсим body
+      res.json(JSON.parse(body));
+    })
+  } catch (err
+  ) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+})
+
 
 module.exports = router;
