@@ -65,7 +65,7 @@ router.post(
           id: user.id,
         },
       };
-
+      console.log(req.body);
       // создаём токен:
       jwt.sign(
         payload,
