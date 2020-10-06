@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Link } from "react-router-dom";
+
 import axios from "axios";
 
 function Register() {
@@ -33,13 +35,8 @@ function Register() {
           },
         };
         const body = JSON.stringify(newUser);
-        console.log(body);
-        console.log(config);
 
-        // ТУТ ОШИБКА НАЧИНАЕТСЯ
         const res = await axios.post("/api/users", body, config);
-        console.log("HERERERE");
-        console.log(res);
 
       } catch (err) {
         console.error(err);
@@ -94,7 +91,7 @@ function Register() {
       </div>
       <input type="submit" className="btn btn-primary" value="Register" />
     </form>
-    <p className="my-1"> Already have an account? <a href="login.html">Sign In</a>
+    <p className="my-1"> Already have an account? <Link to="/login">Sign In</Link>
     </p>
   </section>
   )
