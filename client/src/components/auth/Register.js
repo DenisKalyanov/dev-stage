@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from "react-router-dom";
+import { connect } from "react-redux";
+import PropTypes from "prop-types";
 
 import axios from "axios";
 
-function Register() {
+import { setAlert } from "../../actions/alert";
+
+function Register({ setAlert }) {
 
   const [formData, setFormData] = useState({
     name: "",
@@ -19,15 +23,16 @@ function Register() {
   };
   const onSubmit = async (e) => {
     e.preventDefault();
+    
     if (password !== confirmPassword) {
-      console.log("Password do not match");
+      setAlert("Password do not match", "danger", 3000);
     } else {
-
       const newUser = {
         name,
         email,
         password,
       };
+
       try {
         const config = {
           headers: {
@@ -35,6 +40,7 @@ function Register() {
           },
         };
         const body = JSON.stringify(newUser);
+
 
         const res = await axios.post("/api/users", body, config);
 
@@ -54,7 +60,6 @@ function Register() {
           type="text"
           placeholder="Name"
           name="name"
-          required
           value={name}
           onChange={onChange}
         />
@@ -74,7 +79,6 @@ function Register() {
           type="password"
           placeholder="Password"
           name="password"
-          minLength="6"
           value={password}
           onChange={onChange}
         />
@@ -84,7 +88,6 @@ function Register() {
           type="password"
           placeholder="Confirm Password"
           name="confirmPassword"
-          minLength="6"
           value={confirmPassword}
           onChange={onChange}
         />
@@ -94,7 +97,15 @@ function Register() {
     <p className="my-1"> Already have an account? <Link to="/login">Sign In</Link>
     </p>
   </section>
-  )
+  );
 };
 
-export default Register;
+Register.propTypes = {
+  setAlert: PropTypes.func.isRequired,
+};
+
+const mapDispatchToProps = {
+  setAlert,
+};
+
+export default connect(null, mapDispatchToProps)(Register);

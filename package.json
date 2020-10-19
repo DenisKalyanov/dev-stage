@@ -29,7 +29,8 @@
     "http-proxy-middleware": "^1.0.5",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.9.17",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "uuid": "^8.3.1"
   },
   "devDependencies": {
     "concurrently": "^5.2.0",
